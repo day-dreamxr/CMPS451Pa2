@@ -69,21 +69,23 @@ if __name__ == "__main__":
 #
 
 #custom imports
-
+import pickle as pckl
 
 #other imports
 from   copy       import deepcopy as dpcpy
 
-'''
-from   matplotlib import pyplot as plt
-import mne
+
+from matplotlib import pyplot as plt
+#import mne
 import numpy  as np 
 import os
 import pandas as pd
 import seaborn as sns
-'''
-#%% USER INTERFACE              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+#%% USER INTERFACE              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+subject = 'sb1'
+session = 'se1'
+soi_file = '1_132_bk_pic.pckl'
 
 #%% CONSTANTS                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -113,7 +115,9 @@ def main():
 #%% MAIN CODE                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #Main code start here
 
-
+with open('1_132_bk_pic.pckl', 'rb') as fp:
+    soi = pckl.load(fp)
+#
 
 #%% SELF-RUN                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #Main Self-run block
@@ -121,5 +125,14 @@ if __name__ == "__main__":
     
     print(f"\"{module_name}\" module begins.")
     
+    print(f"{soi['info']['eeg_info']['channels'][11]['label']}")
+    print(f"{soi['info']['eeg_info']['channels'][3]['label']}")
+    print(f"{soi['info']['eeg_info']['channels'][16]['label']}")
+    
+    print(f"{soi['series'][11]}")
+    plt.plot(soi['series'][11], soi['tStamp'])
+    
+    
     #TEST Code
     main()
+# %%
