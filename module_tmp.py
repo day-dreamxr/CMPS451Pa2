@@ -86,15 +86,22 @@ if __name__ == "__main__":
     
     print(f"\"{module_name}\" module begins.")
     
-    F8 = pd.DataFrame(soi['series'][11], soi['tStamp'])
-    F4 = pd.DataFrame(soi['series'][3], soi['tStamp'])
-    Fz = pd.DataFrame(soi['series'][16], soi['tStamp'])
+    F8 = pd.DataFrame(soi['series'][11], soi['tStamp'], columns=['Signals'])
+    F8.index.name = 'Timestamps'
+    F4 = pd.DataFrame(soi['series'][3], soi['tStamp'], columns=['Signals'])
+    F4.index.name = 'Timestamps'
+    Fz = pd.DataFrame(soi['series'][16], soi['tStamp'], columns=['Signals'])
+    Fz.index.name = 'Timestamps'
+    
+    F8.to_csv('F8_raw.csv')
+    F4.to_csv('F4_raw.csv')
+    Fz.to_csv('Fz_raw.csv')
 
     fig, ax = plt.subplots(3, figsize=[15, 25])
     
     ax[0].plot(F8)
     ax[0].set_xlim([soi['tStamp'].min(), soi['tStamp'].max()])
-    ax[0].axhline(F8[0].mean(), color='r', linestyle='--', label='Mean')
+    ax[0].axhline(F8['Signals'].mean(), color='r', linestyle='--', label='Mean')
     ax[0].set_title('F8')
     ax[0].legend()
     ax[0].set_xlabel('Timestamp (µs)')
@@ -102,7 +109,7 @@ if __name__ == "__main__":
     
     ax[1].plot(F4)
     ax[1].set_xlim([soi['tStamp'].min(), soi['tStamp'].max()])
-    ax[1].axhline(F4[0].mean(), color='r', linestyle='--', label='Mean')
+    ax[1].axhline(F4['Signals'].mean(), color='r', linestyle='--', label='Mean')
     ax[1].set_title('F4')
     ax[1].legend()
     ax[1].set_xlabel('Timestamp (µs)')
@@ -110,7 +117,7 @@ if __name__ == "__main__":
     
     ax[2].plot(Fz)
     ax[2].set_xlim([soi['tStamp'].min(), soi['tStamp'].max()])
-    ax[2].axhline(Fz[0].mean(), color='r', linestyle='--', label='Mean')
+    ax[2].axhline(Fz['Signals'].mean(), color='r', linestyle='--', label='Mean')
     ax[2].set_title('Fz')
     ax[2].legend()
     ax[2].set_xlabel('Timestamp (µs)')
