@@ -85,6 +85,8 @@ with open(soi_file, 'rb') as fp:
 if __name__ == "__main__":
     
     print(f"\"{module_name}\" module begins.")
+    print(f"Sampling Rate: {soi['info']['eeg_info']['effective_srate']}")
+    print(f"Min and Max Timestamp: {soi['tStamp'].min()}, {soi['tStamp'].max()}")
     
     F8 = pd.DataFrame(soi['series'][11], soi['tStamp'], columns=['Signals'])
     F8.index.name = 'Timestamps'
