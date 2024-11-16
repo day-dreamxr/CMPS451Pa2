@@ -11,10 +11,10 @@ Description:
     PA2.2
 
 Authors:
-    <***>
+    Zachary Gros, Stephen Legnon
 
-Date Created     :  <***>
-Date Last Updated:  <***>
+Date Created     :  11/8/2024
+Date Last Updated:  11/8/2024
 
 Doc:
     <***>
@@ -64,21 +64,8 @@ soi_file = '1_132_bk_pic.pckl'
 
 
 #Function definitions Start Here
+#%%
 def main():
-    pass
-#
-
-#%% MAIN CODE                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#Main code start here
-
-with open(soi_file, 'rb') as fp:
-    soi = pckl.load(fp)
-#
-
-#%% SELF-RUN                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#Main Self-run block
-if __name__ == "__main__":
-    
     print(f"\"{module_name}\" module begins.")
     
     ## Stream streams
@@ -148,7 +135,18 @@ if __name__ == "__main__":
     plt.figure(6).set_figwidth(20)
     plt.title('Fz Filtered')
     plt.plot(FzBandpass)
-    
+#
+
+#%% MAIN CODE                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#Main code start here
+
+with open(soi_file, 'rb') as fp:
+    soi = pckl.load(fp)
+#
+
+#%% SELF-RUN                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#Main Self-run block
+if __name__ == "__main__":
     #TEST Code
     main()
 # %%
