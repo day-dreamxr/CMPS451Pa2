@@ -79,8 +79,9 @@ import pickle as pckl
 #other imports
 from   copy       import deepcopy as dpcpy
 
+import math
 from   matplotlib import pyplot as plt
-import mne
+#import mne
 import numpy  as np 
 import os
 import pandas as pd
@@ -111,19 +112,56 @@ import seaborn as sns
 
 #Function definitions Start Here
 def main():
-    pass
+    subjects = sorted(os.listdir("INPUT"), key=len)
+    L = 100
+    
+    data = pd.DataFrame(columns=['FILENAME', 'SUBJECT', 'SESSION', 'CHANNEL', 'F1', 'F2','F3', 'F4', 'F5', 'F6', 'F7', 'F8'])
+    data.index.name = 'OBJECT ID'
+    print(data)
+    
+    for subject in subjects:
+        sessions = sorted(os.listdir("INPUT\\"+subject), key=len)
+        for session in sessions:
+            files = sorted(os.listdir("INPUT\\"+subject+"\\"+session), key=len)
+            for file in files:
+                with open("INPUT\\"+subject+"\\"+session+"\\"+file, 'rb') as fp:
+                    soi = pckl.load(fp)
+                #
+                windowMeans = []
+                
+                windowBounds = [0, L]
+                windowNum = 0
+                numOfWindows = math.ceil(len(soi['series'][11]))
+                while windowNum <= numOfWindows:
+                    #WINDOW THE DATA
+                    windowedData = soi['series'][11][range(0, 100)]
+                    windowMean = windowedData.mean()
+                    windowMeans.append(windowMean)
+                    
+                    
+                    
+                    #MOVE WINDOW
+                    windowNum = windowNum + 1
+                    windowBounds = [(windowNum * 0.75) * L, (windowNum * 0.75 + 1) * L]
+                #
+                
+                #GENERATE FEATURES
+                print(windowMeans)
+                
+                #PUT FEATURES IN DATAFRAME
+            #
+        #
+    #
+    
+    #CONVERT DATAFRAME TO CSV
+    data.to_csv('Data.csv')
 #
 
 #%% MAIN CODE                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #Main code start here
-files = sorted(os.listdir("DataSmall/sb1/se1"), key=len)
 
-for file in files:
-    with open("DataSmall/sb1/se1/"+file, 'rb') as fp:
-        soi = pckl.load(fp)
-        plt.plot(soi['series'][11])
-    #
-#
+
+
 
 #%% SELF-RUN                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #Main Self-run block
