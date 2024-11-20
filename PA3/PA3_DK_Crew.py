@@ -86,6 +86,8 @@ import numpy  as np
 import os
 import pandas as pd
 import seaborn as sns
+from scipy.signal import butter, filtfilt, iirfilter
+from scipy.stats import skew, kurtosis
 
 #%% USER INTERFACE              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -109,15 +111,13 @@ import seaborn as sns
 #Class definitions Start Here
 
 
-
 #Function definitions Start Here
 def main():
     subjects = sorted(os.listdir("INPUT"), key=len)
     L = 100
     
-    data = pd.DataFrame(columns=['FILENAME', 'SUBJECT', 'SESSION', 'CHANNEL', 'F1', 'F2','F3', 'F4', 'F5', 'F6', 'F7', 'F8'])
+    data = pd.DataFrame(columns=['FILENAME', 'SUBJECT', 'SESSION', 'CHANNEL', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8'])
     data.index.name = 'OBJECT ID'
-    print(data)
     
     for subject in subjects:
         sessions = sorted(os.listdir("INPUT\\"+subject), key=len)
@@ -127,40 +127,93 @@ def main():
                 with open("INPUT\\"+subject+"\\"+session+"\\"+file, 'rb') as fp:
                     soi = pckl.load(fp)
                 #
-                windowMeans = []
-                
-                windowBounds = [0, L]
-                windowNum = 0
-                numOfWindows = math.ceil(len(soi['series'][11]))
-                while windowNum <= numOfWindows:
-                    #WINDOW THE DATA
-                    windowedData = soi['series'][11][range(0, 100)]
-                    windowMean = windowedData.mean()
-                    windowMeans.append(windowMean)
+                for i in [11, 3, 16]:
+                    stream = soi['series'][i]
+                    ##APPLY FILTERS
+                    notchFilter1 = butter(1, [59,61], btype='bandstop', fs=1000)
+                    notchFilter2 = butter(1, [119,121], btype='bandstop', fs=1000)
+                    notchFilter3 = butter(1, [179,181], btype='bandstop', fs=1000)
+                    notchFilter4 = butter(1, [239,241], btype='bandstop', fs=1000)
+
+                    filteredStream = filtfilt(notchFilter1[0], notchFilter1[1], stream)
+                    filteredStream = filtfilt(notchFilter2[0], notchFilter2[1], filteredStream)
+                    filteredStream = filtfilt(notchFilter3[0], notchFilter3[1], filteredStream)
+                    filteredStream = filtfilt(notchFilter4[0], notchFilter4[1], filteredStream)
                     
+                    impedanceFilter = butter(1, [124,126], btype='bandstop', fs=1000)
+                    filteredStream = filtfilt(impedanceFilter[0], impedanceFilter[1], filteredStream)
                     
+                    bandPassFilter = butter(1, [0.5,32], btype='bandpass', fs=1000)
+                    filteredStream = filtfilt(bandPassFilter[0], bandPassFilter[1], filteredStream)
                     
-                    #MOVE WINDOW
-                    windowNum = windowNum + 1
-                    windowBounds = [(windowNum * 0.75) * L, (windowNum * 0.75 + 1) * L]
+                    ##WINDOW DATA
+                    windowMeans = []
+                    windowStds = []
+                    windowBounds = [0, L]
+                    windowNum = 0
+                    numOfWindows = math.ceil(len(filteredStream)/L)
+                    while windowNum <= numOfWindows:
+                        ##WINDOW THE DATA
+                        windowedData = filteredStream[int(windowBounds[0]):int(windowBounds[1])]
+                        windowMeans.append(np.mean(windowedData))
+                        windowStds.append(np.std(windowedData))
+                    
+                        ##MOVE WINDOW
+                        windowNum = windowNum + 1
+                        windowBounds = [(windowNum * 0.75) * L, (windowNum * 0.75 + 1) * L]
+                        if windowBounds[1] > len(filteredStream):
+                            windowBounds[1] = len(filteredStream)
+                        #
+                    #
+                    ##GENERATE FEATURES
+                    f1 = np.mean(windowMeans)
+                    f2 = np.std(windowMeans)
+                    f3 = skew(windowMeans)
+                    f4 = kurtosis(windowMeans)
+                    f5 = np.mean(windowStds)
+                    f6 = np.std(windowStds)
+                    f7 = skew(windowStds)
+                    f8 = kurtosis(windowStds)
+                    
+                    ##ADD FEATURES TO DATAFRAME
+                    data.loc[len(data.index)] = [file, subject, session, soi['info']['eeg_info']['channels'][i]['label'], f1, f2, f3, f4, f5, f6, f7, f8]
                 #
-                
-                #GENERATE FEATURES
-                print(windowMeans)
-                
-                #PUT FEATURES IN DATAFRAME
             #
         #
     #
     
-    #CONVERT DATAFRAME TO CSV
-    data.to_csv('Data.csv')
+    ##CONVERT DATAFRAME TO CSV
+    data.to_csv('OUTPUT\\Data.csv')
+    
+    vPlot, ax = plt.subplots(1)
+    ax.violinplot(dataset=data[['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8']], showmeans=True)
+    ax.set_title(label="Generated Features From DataSmall.zip")
+    ax.set_xlabel("Feature Number")
+    vPlot.savefig('OUTPUT\\vPlot.png')
+    
+    hPlots, axs = plt.subplots(nrows=2, ncols=4, constrained_layout=True, figsize=[15, 7])
+    hPlots.suptitle("Histograms of Each Feature Generated From DataSmall.zip")
+    axs[0][0].hist(data['F1'])
+    axs[0][0].set_title("F1")
+    axs[0][1].hist(data['F2'])
+    axs[0][1].set_title("F2")
+    axs[0][2].hist(data['F3'])
+    axs[0][2].set_title("F3")
+    axs[0][3].hist(data['F4'])
+    axs[0][3].set_title("F4")
+    axs[1][0].hist(data['F5'])
+    axs[1][0].set_title("F5")
+    axs[1][1].hist(data['F6'])
+    axs[1][1].set_title("F6")
+    axs[1][2].hist(data['F7'])
+    axs[1][2].set_title("F7")
+    axs[1][3].hist(data['F8'])
+    axs[1][3].set_title("F8")
+    hPlots.savefig('OUTPUT\\hPlots.png')
 #
 
 #%% MAIN CODE                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #Main code start here
-
-
 
 
 #%% SELF-RUN                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -171,3 +224,4 @@ if __name__ == "__main__":
     
     #TEST Code
     main()
+# %%
